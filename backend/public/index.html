@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlugaTudo — Plataforma de Aluguel P2P com Caução Garantida</title>
+  
+  <!-- Fonte Oficial Inter (Stitch Design Token) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-navbar">
+    <div class="nav-container">
+      <div class="brand-logo" onclick="app.showSection('explore')">
+        <div class="brand-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="brand-text">
+          <h1>AlugaTudo</h1>
+          <span>Economia Compartilhada • Caução Garantida</span>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="O que você precisa alugar hoje? (ex: Câmera, DeWalt, Projetor...)">
+      </div>
+
+      <!-- Actions -->
+      <div class="nav-actions">
+        <button class="nav-link-btn active" id="navExplore" onclick="app.showSection('explore')">
+          <i class="fa-solid fa-compass"></i> Explorar
+        </button>
+        <button class="nav-link-btn" id="navRentals" onclick="app.showSection('rentals')">
+          <i class="fa-solid fa-clock-rotate-left"></i> Meus Aluguéis
+        </button>
+        <button class="btn-primary" onclick="app.openPostItemModal()">
+          <i class="fa-solid fa-plus"></i> Anunciar Item
+        </button>
+
+        <!-- User profile badge & Switcher -->
+        <div class="user-badge" onclick="app.showSection('profile')" title="Clique para ver seu perfil ou trocar de usuário">
+          <img id="userAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="user-avatar">
+          <div class="user-info">
+            <span id="userName" class="user-name">Vinicius Pini</span>
+            <span id="userKycBadge" class="user-role"><i class="fa-solid fa-circle-check"></i> KYC Aprovado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter Bar (Explorar) -->
+  <section class="filter-bar" id="filterBar">
+    <div class="filter-container">
+      <div class="category-chips" id="categoryChips">
+        <button class="chip active" onclick="app.setCategory('Todas')">Todas</button>
+        <button class="chip" onclick="app.setCategory('Ferramentas')"><i class="fa-solid fa-screwdriver-wrench"></i> Ferramentas</button>
+        <button class="chip" onclick="app.setCategory('Eletrônicos & Câmeras')"><i class="fa-solid fa-camera"></i> Câmeras & Tech</button>
+        <button class="chip" onclick="app.setCategory('Festas & Eventos')"><i class="fa-solid fa-champagne-glasses"></i> Festas</button>
+        <button class="chip" onclick="app.setCategory('Esportes')"><i class="fa-solid fa-campground"></i> Esportes & Camping</button>
+      </div>
+
+      <div class="radius-filter">
+        <span><i class="fa-solid fa-location-dot"></i> Raio:</span>
+        <input type="range" id="radiusInput" min="1" max="25" value="5" onchange="app.setRadius(this.value)">
+        <span id="radiusLabel" style="color: var(--color-primary); font-weight: 800;">5 km</span>
+      </div>
+
+      <div class="view-toggle">
+        <button class="view-btn active" id="viewGridBtn" onclick="app.setViewMode('grid')" title="Visualização em Grade">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+        <button class="view-btn" id="viewListBtn" onclick="app.setViewMode('list')" title="Visualização em Lista">
+          <i class="fa-solid fa-list"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    
+    <!-- SECTION 1: EXPLORE & CATALOG -->
+    <div id="sectionExplore">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Equipamentos Disponíveis para Aluguel</h2>
+          <p class="section-subtitle">Alugue de vizinhos com proteção e custódia total da caução (Escrow)</p>
+        </div>
+        <div id="itemsCountBadge" style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary);">
+          Carregando...
+        </div>
+      </div>
+
+      <div class="items-grid" id="itemsGrid">
+        <!-- Injetado dinamicamente via app.js -->
+      </div>
+    </div>
+
+    <!-- SECTION 2: MEUS ALUGUÉIS -->
+    <div id="sectionRentals" style="display: none;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Minhas Reservas & Aluguéis</h2>
+          <p class="section-subtitle">Acompanhe status, liberação com PIN, vistoria fotográfica e devolução</p>
+        </div>
+        <button class="btn-secondary" onclick="app.loadRentals()">
+          <i class="fa-solid fa-rotate-right"></i> Atualizar
+        </button>
+      </div>
+
+      <div id="rentalsList" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Injetado dinamicamente via app.js -->
+      </div>
+    </div>
+
+    <!-- SECTION 3: PERFIL & KYC -->
+    <div id="sectionProfile" style="display: none;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Meu Perfil & Verificação de Identidade</h2>
+          <p class="section-subtitle">Gerencie seus dados, reputação na comunidade e status KYC</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;">
+        <!-- User Card -->
+        <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--color-outline-variant); padding: 24px; text-align: center; box-shadow: var(--shadow-sm);">
+          <img id="profileCardAvatar" src="" alt="Avatar" style="width: 96px; height: 96px; border-radius: var(--radius-full); object-fit: cover; margin-bottom: 12px; border: 3px solid var(--color-primary-fixed);">
+          <h3 id="profileCardName" style="font-size: 1.2rem; font-weight: 800;">Carregando...</h3>
+          <p id="profileCardEmail" style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 12px;"></p>
+          
+          <div id="profileKycStatusBox" style="margin-bottom: 16px;">
+            <!-- Badge de KYC -->
+          </div>
+
+          <div style="border-top: 1px solid var(--color-outline-variant); padding-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">
+            <div style="background: var(--color-surface-container); padding: 10px; border-radius: var(--radius-md);">
+              <span style="font-size: 1.2rem; font-weight: 800; color: var(--color-primary);" id="profileRentalsCount">0</span>
+              <p style="font-size: 0.7rem; color: var(--color-on-surface-variant);">Aluguéis Concluídos</p>
+            </div>
+            <div style="background: var(--color-surface-container); padding: 10px; border-radius: var(--radius-md);">
+              <span style="font-size: 1.2rem; font-weight: 800; color: var(--color-star-amber);" id="profileRating">5.0 ★</span>
+              <p style="font-size: 0.7rem; color: var(--color-on-surface-variant);">Avaliação Média</p>
+            </div>
+          </div>
+
+          <!-- Switcher Demo Persona -->
+          <div style="margin-top: 24px; border-top: 1px dashed var(--color-outline); padding-top: 16px;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: var(--color-on-surface-variant); display: block; margin-bottom: 8px;">
+              ALTERNAR PERSONA DEMO:
+            </label>
+            <div style="display: flex; gap: 8px; justify-content: center;">
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="app.switchUser('usr_001')">
+                Vinicius (Locatário)
+              </button>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="app.switchUser('usr_002')">
+                Lucas (Locador)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KYC and Escrow Guarantees info -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="escrow-callout-box" style="margin-bottom: 0;">
+            <i class="fa-solid fa-shield-check"></i>
+            <div>
+              <div class="escrow-callout-title">Garantia Escrow de Custódia AlugaTudo</div>
+              <div class="escrow-callout-text">
+                Todas as reservas na plataforma possuem retenção automática de caução. O proprietário tem segurança contra danos e o locatário tem a garantia de devolução integral após a vistoria final.
+              </div>
+            </div>
+          </div>
+
+          <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--color-outline-variant); padding: 24px;">
+            <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px;"><i class="fa-solid fa-id-card"></i> Validação de Documento (KYC)</h4>
+            <p style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 16px;">
+              Para alugar equipamentos de alto valor com caução retida, é obrigatório validar seu documento de identificação (RG ou CNH).
+            </p>
+            <button class="btn-primary" onclick="app.openKycModal()">
+              <i class="fa-solid fa-upload"></i> Enviar / Atualizar Documento KYC
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: DETALHES DO ITEM (M-02) -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <button class="modal-close-btn" onclick="app.closeModal('detailModal')">&times;</button>
+      
+      <div class="detail-gallery">
+        <img id="detailMainImg" class="detail-main-img" src="" alt="Item">
+        <div class="escrow-badge" style="top: 16px; left: 16px;">
+          <i class="fa-solid fa-shield-halved"></i> Caução Garantida por Escrow
+        </div>
+      </div>
+
+      <div class="detail-body">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <div>
+            <span id="detailCategory" class="card-category">Categoria</span>
+            <h2 id="detailTitle" style="font-size: 1.4rem; font-weight: 800; line-height: 1.2;">Título do Equipamento</h2>
+            <p id="detailLocation" style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-top: 4px;">
+              <i class="fa-solid fa-location-dot"></i> Pinheiros, SP
+            </p>
+          </div>
+          <div style="text-align: right;">
+            <div id="detailDailyPrice" style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">R$ 0,00</div>
+            <span style="font-size: 0.75rem; color: var(--color-on-surface-variant);">por dia</span>
+          </div>
+        </div>
+
+        <p id="detailDesc" style="font-size: 0.9rem; color: var(--color-on-surface-variant); line-height: 1.6; margin: 16px 0;">
+          Descrição detalhada...
+        </p>
+
+        <!-- Host Card -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--color-surface-container); padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img id="detailHostAvatar" src="" alt="Host" style="width: 44px; height: 44px; border-radius: var(--radius-full); object-fit: cover;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <strong id="detailHostName">Lucas Mendes</strong>
+                <span style="color: var(--color-primary); font-size: 0.75rem; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Verificado</span>
+              </div>
+              <span id="detailHostRating" style="font-size: 0.8rem; color: var(--color-on-surface-variant);"><i class="fa-solid fa-star star-icon"></i> 4.9 • Desde 2023</span>
+            </div>
+          </div>
+          <div style="text-align: right; font-size: 0.8rem; color: var(--color-on-surface-variant);">
+            <i class="fa-solid fa-truck-ramp-box"></i> Retirada no Local
+          </div>
+        </div>
+
+        <!-- Seletor de Período e Cálculo Reativo -->
+        <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-regular fa-calendar-days"></i> Período do Aluguel</h4>
+        <div class="date-picker-row">
+          <div class="input-group">
+            <label>Data de Início (Retirada)</label>
+            <input type="date" id="rentalStartDate" class="input-field" onchange="app.recalculateDetailPricing()">
+          </div>
+          <div class="input-group">
+            <label>Data de Término (Devolução)</label>
+            <input type="date" id="rentalEndDate" class="input-field" onchange="app.recalculateDetailPricing()">
+          </div>
+        </div>
+
+        <!-- Resumo Financeiro com Caução em Destaque -->
+        <div class="price-transparency-card">
+          <div class="calc-row">
+            <span id="calcDaysLabel">Diárias (1 dia)</span>
+            <span id="calcSubtotal">R$ 0,00</span>
+          </div>
+          <div class="calc-row" id="calcDiscountRow" style="display: none; color: #16A34A; font-weight: 600;">
+            <span>Desconto 3+ dias (15%)</span>
+            <span id="calcDiscount">- R$ 0,00</span>
+          </div>
+          <div class="calc-row">
+            <span>Taxa de serviço AlugaTudo (10%)</span>
+            <span id="calcServiceFee">R$ 0,00</span>
+          </div>
+          <div class="calc-row total">
+            <span>Total da Locação</span>
+            <span id="calcTotalPrice">R$ 0,00</span>
+          </div>
+
+          <!-- Caução Escrow -->
+          <div class="escrow-highlight-row">
+            <span><i class="fa-solid fa-shield-halved"></i> Caução em Custódia (Devolvida na vistoria)</span>
+            <span id="calcDepositAmount">R$ 0,00</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem;" onclick="app.proceedToCheckout()">
+          <i class="fa-solid fa-credit-card"></i> Alugar Agora & Bloquear Caução
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHECKOUT & PAGAMENTO (M-03) -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-content" style="max-width: 620px;">
+      <button class="modal-close-btn" onclick="app.closeModal('checkoutModal')">&times;</button>
+      
+      <div style="padding: 24px;">
+        <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 4px;">Finalizar Locação & Pagamento</h2>
+        <p style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 20px;">
+          Seu pagamento só é liberado para o anfitrião após você confirmar o recebimento via PIN.
+        </p>
+
+        <!-- Item Mini Preview -->
+        <div style="display: flex; gap: 14px; background: var(--color-surface-container); padding: 12px; border-radius: var(--radius-md); margin-bottom: 18px;">
+          <img id="checkoutItemImg" src="" style="width: 60px; height: 60px; border-radius: var(--radius-sm); object-fit: cover;">
+          <div>
+            <h4 id="checkoutItemTitle" style="font-size: 0.95rem; font-weight: 700;">Item</h4>
+            <span id="checkoutDates" style="font-size: 0.8rem; color: var(--color-on-surface-variant);">Datas</span>
+          </div>
+        </div>
+
+        <!-- Opções de Frete -->
+        <label style="font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 6px;">Como você deseja receber?</label>
+        <div class="freight-options">
+          <div class="freight-option selected" id="freightPickup" onclick="app.selectFreight('pickup')">
+            <div>
+              <strong style="font-size: 0.9rem;">Retirada no Local</strong>
+              <p style="font-size: 0.75rem; color: var(--color-on-surface-variant);">Ponto de encontro combinado com o locador</p>
+            </div>
+            <span style="font-weight: 700; color: var(--color-primary);">Grátis</span>
+          </div>
+
+          <div class="freight-option" id="freightHost" onclick="app.selectFreight('hostDelivery')">
+            <div>
+              <strong style="font-size: 0.9rem;">Entrega pelo Dono</strong>
+              <p style="font-size: 0.75rem; color: var(--color-on-surface-variant);">O proprietário leva em mãos até você</p>
+            </div>
+            <span style="font-weight: 700;">+ R$ 25,00</span>
+          </div>
+
+          <div class="freight-option" id="freightCourier" onclick="app.selectFreight('courier')">
+            <div>
+              <strong style="font-size: 0.9rem;">Envio Uber Flash / Loggi</strong>
+              <p style="font-size: 0.75rem; color: var(--color-on-surface-variant);">Entrega expressa com rastreio em tempo real</p>
+            </div>
+            <span style="font-weight: 700;">+ R$ 35,00</span>
+          </div>
+        </div>
+
+        <!-- Método de Pagamento -->
+        <label style="font-size: 0.85rem; font-weight: 700; display: block; margin: 18px 0 8px 0;">Método de Pagamento</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+          <button class="btn-secondary active" id="payMethodCard" onclick="app.setPaymentMethod('creditCard')" style="justify-content: center; border-color: var(--color-primary); color: var(--color-primary);">
+            <i class="fa-solid fa-credit-card"></i> Cartão de Crédito
+          </button>
+          <button class="btn-secondary" id="payMethodPix" onclick="app.setPaymentMethod('pix')" style="justify-content: center;">
+            <i class="fa-brands fa-pix"></i> PIX Instantâneo
+          </button>
+        </div>
+
+        <!-- Cartão Box -->
+        <div id="cardPaymentBox">
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label>Número do Cartão de Crédito</label>
+            <input type="text" class="input-field" placeholder="4532 •••• •••• 8821" value="4532 9812 3421 8821">
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+            <div class="input-group">
+              <label>Validade</label>
+              <input type="text" class="input-field" placeholder="MM/AA" value="08/29">
+            </div>
+            <div class="input-group">
+              <label>CVV</label>
+              <input type="text" class="input-field" placeholder="123" value="382">
+            </div>
+          </div>
+        </div>
+
+        <!-- PIX Box -->
+        <div id="pixPaymentBox" style="display: none; background: #F0FDF4; border: 1px dashed #22C55E; padding: 16px; border-radius: var(--radius-md); text-align: center;">
+          <i class="fa-brands fa-pix" style="font-size: 2.2rem; color: #16A34A; margin-bottom: 6px;"></i>
+          <h4 style="font-size: 0.95rem; font-weight: 700;">Chave PIX Copia e Cola</h4>
+          <p style="font-size: 0.75rem; color: #15803D; margin-bottom: 10px;">Pagamento instantâneo com aprovação imediata</p>
+          <input type="text" readonly class="input-field" style="text-align: center; font-size: 0.8rem;" value="00020126580014br.gov.bcb.pix0136alugatudo-escrow-pix-992102120000">
+          <button class="btn-secondary" style="font-size: 0.8rem; margin-top: 8px;" onclick="app.showToast('Chave PIX copiada!')">
+            <i class="fa-regular fa-copy"></i> Copiar Código PIX
+          </button>
+        </div>
+
+        <!-- Total Box -->
+        <div style="background: var(--color-surface-container); border-radius: var(--radius-md); padding: 14px; margin: 20px 0; border: 1px solid var(--color-outline-variant);">
+          <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.15rem; color: var(--color-on-surface);">
+            <span>Valor Total a Pagar:</span>
+            <span id="checkoutTotalValue">R$ 0,00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--color-primary); font-weight: 700; margin-top: 6px;">
+            <span>Caução Garantida Bloqueada:</span>
+            <span id="checkoutDepositValue">R$ 0,00</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="btnConfirmPay" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem;" onclick="app.executePayment()">
+          <i class="fa-solid fa-lock"></i> Pagar e Confirmar Reserva
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHAT & GESTÃO DA ENTREGA (M-04) -->
+  <div class="modal-overlay" id="chatModal">
+    <div class="modal-content" style="max-width: 680px; padding: 0;">
+      <button class="modal-close-btn" onclick="app.closeModal('chatModal')">&times;</button>
+      
+      <div class="chat-window">
+        <!-- Header -->
+        <div class="chat-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img id="chatItemThumb" src="" style="width: 40px; height: 40px; border-radius: var(--radius-sm); object-fit: cover;">
+            <div>
+              <h4 id="chatItemTitle" style="font-size: 0.95rem; font-weight: 700;">Item Alugado</h4>
+              <span id="chatReservationCode" style="font-size: 0.72rem; color: var(--color-on-surface-variant);">Reserva #</span>
+            </div>
+          </div>
+          <span id="chatStatusPill" class="chat-status-pill status-paidConfirmed">PAGO & CONFIRMADO</span>
+        </div>
+
+        <!-- PIN Handover Banner -->
+        <div style="padding: 12px 18px 0 18px;">
+          <div class="pin-banner">
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+                <i class="fa-solid fa-key"></i> PIN de Retirada Física
+              </div>
+              <div style="font-size: 0.8rem; opacity: 0.9;">Apresente este código no ato da entrega</div>
+            </div>
+            <div class="pin-digit-box" id="chatPinDisplay">
+              ------
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar: PIN Validation & Inspection Photo -->
+        <div style="padding: 0 18px 10px 18px; display: flex; gap: 8px;">
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;" onclick="app.promptVerifyPin()">
+            <i class="fa-solid fa-check-double"></i> Validar PIN de Entrega
+          </button>
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;" onclick="app.promptAddInspection()">
+            <i class="fa-solid fa-camera"></i> Vistoria Fotográfica
+          </button>
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px; margin-left: auto;" onclick="app.promptCompleteRental()">
+            <i class="fa-solid fa-handshake"></i> Concluir Devolução
+          </button>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="chat-messages" id="chatMessagesArea">
+          <!-- Injetado dinamicamente via app.js -->
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar">
+          <input type="text" id="chatInputMessage" class="input-field" placeholder="Digite uma mensagem para o anfitrião..." onkeypress="if(event.key==='Enter') app.sendChatMessage()">
+          <button class="btn-primary" onclick="app.sendChatMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ANUNCIAR NOVO ITEM (M-06) -->
+  <div class="modal-overlay" id="postItemModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <button class="modal-close-btn" onclick="app.closeModal('postItemModal')">&times;</button>
+      
+      <div style="padding: 24px;">
+        <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 4px;">Anunciar Equipamento no AlugaTudo</h2>
+        <p style="font-size: 0.85rem; color: var(--color-on-surface-variant); margin-bottom: 20px;">
+          Ganhe dinheiro extra alugando seus equipamentos com retenção de caução garantida.
+        </p>
+
+        <form id="postItemForm" onsubmit="event.preventDefault(); app.submitPostItem();">
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label>Título do Anúncio *</label>
+            <input type="text" id="postTitle" required class="input-field" placeholder="Ex: Câmera Canon EOS R6 + Lente 24-105mm">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="input-group">
+              <label>Categoria *</label>
+              <select id="postCategory" required class="input-field">
+                <option value="Ferramentas">Ferramentas</option>
+                <option value="Eletrônicos & Câmeras" selected>Eletrônicos & Câmeras</option>
+                <option value="Festas & Eventos">Festas & Eventos</option>
+                <option value="Esportes">Esportes & Camping</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Local de Retirada / Bairro *</label>
+              <input type="text" id="postNeighborhood" required class="input-field" placeholder="Ex: Pinheiros, SP" value="Pinheiros, SP">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="input-group">
+              <label>Preço da Diária (R$) *</label>
+              <input type="number" id="postDailyPrice" required min="1" step="0.5" class="input-field" placeholder="Ex: 95">
+            </div>
+            <div class="input-group">
+              <label>Valor da Caução Escrow (R$) *</label>
+              <input type="number" id="postDepositAmount" required min="1" step="1" class="input-field" placeholder="Ex: 800">
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label>URL da Foto Principal do Equipamento</label>
+            <input type="url" id="postImageUrl" class="input-field" placeholder="https://..." value="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 20px;">
+            <label>Descrição e Regras de Uso</label>
+            <textarea id="postDescription" rows="3" class="input-field" placeholder="Descreva os acessórios inclusos, estado de conservação e dicas..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Publicar Anúncio Agora
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VALIDAÇÃO KYC (M-07) -->
+  <div class="modal-overlay" id="kycModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <button class="modal-close-btn" onclick="app.closeModal('kycModal')">&times;</button>
+      
+      <div style="padding: 24px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="width: 50px; height: 50px; background: #ECFDF5; color: var(--color-primary); border-radius: var(--radius-full); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 10px;">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+          <h2 style="font-size: 1.25rem; font-weight: 800;">Validação de Identidade KYC</h2>
+          <p style="font-size: 0.85rem; color: var(--color-on-surface-variant);">
+            Envie seu documento oficial para liberar aluguéis com garantia escrow.
+          </p>
+        </div>
+
+        <form id="kycForm" onsubmit="event.preventDefault(); app.submitKyc();">
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label>Tipo de Documento</label>
+            <select id="kycDocType" class="input-field">
+              <option value="cnh">CNH (Carteira Nacional de Habilitação)</option>
+              <option value="rg">RG (Registro Geral)</option>
+              <option value="passaporte">Passaporte</option>
+            </select>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 16px;">
+            <label>Número do Documento / CPF</label>
+            <input type="text" id="kycDocNumber" required class="input-field" placeholder="Ex: 012.345.678-90" value="384.921.408-12">
+          </div>
+
+          <div style="background: var(--color-surface-container); border: 2px dashed var(--color-outline); border-radius: var(--radius-md); padding: 20px; text-align: center; margin-bottom: 20px;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.8rem; color: var(--color-on-surface-variant); margin-bottom: 8px;"></i>
+            <p style="font-size: 0.85rem; font-weight: 600;">Simulação de Envio de Foto do Documento</p>
+            <span style="font-size: 0.72rem; color: var(--color-on-surface-variant);">Formatos aceitos: JPG, PNG ou PDF</span>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+            <i class="fa-solid fa-check"></i> Enviar e Validar Identidade
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript App -->
+  <script src="js/app.js"></script>
+</body>
+</html>
+
